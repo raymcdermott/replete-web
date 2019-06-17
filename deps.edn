@@ -8,7 +8,7 @@
 
            re-frame                    {:mvn/version "0.10.6"}
            re-com                      {:mvn/version "2.3.0"
-                                        :exclusions [org.clojure/core.async]}
+                                        :exclusions  [org.clojure/core.async]}
 
            org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
            org.clojure/java.classpath  {:mvn/version "0.3.0"}
@@ -24,4 +24,10 @@
                                    com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}
                       :main-opts  ["-m" "figwheel.main"
                                    "-bb" "worker"
-                                   "-b" "replete" "-r"]}}}
+                                   "-b" "replete" "-r"]}
+           :replrepl {:jvm-opts   ["-Xmx1g" "-Xms1g"]
+                      :extra-deps {com.bhauman/figwheel-main       {:mvn/version "0.2.1-SNAPSHOT"}
+                                   com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}
+                      :main-opts  ["-m" "figwheel.main"
+                                   "-bb" "worker"
+                                   "-b" "replrepl" "-r"]}}}

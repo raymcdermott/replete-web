@@ -1,0 +1,12 @@
+;; Override defaults from figwheel-main.edn
+
+^{:ring-server-options {:port 9700}
+  :open-url "http://localhost:9700/replrepl.html"}
+
+;; Main entry point
+
+{:main                replrepl.system
+ :output-to           "resources/public/js/compiled/app.js"
+ :output-dir          "resources/public/js/compiled/out"
+ :asset-path          "js/compiled/out"
+ :external-config     {:devtools/config {:features-to-install :all}}}
