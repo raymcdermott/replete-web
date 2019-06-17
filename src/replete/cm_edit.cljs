@@ -28,7 +28,7 @@
 (defn cmirror-edit-comp
   [opts]
   (let [cmirror (atom nil)
-        {:keys [node-id update-fn change-fn]} opts
+        {:keys [node-id update-fn change-fn cm-options]} opts
         cm-update (partial (or update-fn update-codemirror) cmirror)
         cm-save (or change-fn save-changes)]
     (reagent/create-class
@@ -41,7 +41,7 @@
        (fn cm-did-mount
          [compnt]
          (let [node (dom/dom-node compnt)
-               cm (cm/cm-parinfer node (:cm-options opts))]
+               cm (cm/cm-parinfer node cm-options)]
            (.on cm "change" cm-save)
            (reset! cmirror cm))
          (cm-update compnt))

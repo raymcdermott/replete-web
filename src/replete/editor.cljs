@@ -12,8 +12,8 @@
 
 (def ^:private editor-box-style
   (merge (flex-child-style "1")
-         {:border          "1px solid lightgrey"
-            :border-radius "4px"}))
+         {:border        "1px solid lightgrey"
+          :border-radius "4px"}))
 
 (defn cmirror-box
   "Edit forms with parinfer support"
@@ -21,11 +21,10 @@
   (let [clear-form (re-frame/subscribe [::subs/clear-input-form])
         restore-item (re-frame/subscribe [::subs/restore-item])]
     (fn []
-      (let [cm-options (merge {:autofocus true} cm-opts)
-            opts0 (merge {:node-id "input"
+      (let [opts0 (merge {:node-id "input"
                           :changes (or @restore-item @clear-form)}
                          edit-opts)
-            opts (assoc opts0 :cm-options cm-options)]
+            opts (assoc opts0 :cm-options cm-opts)]
         [box
          :style editor-box-style
          :child [cm-edit/cmirror-edit-comp opts]]))))
@@ -44,41 +43,18 @@
          :style editor-box-style
          :child [cm-eval/cmirror-eval-comp opts]]))))
 
-(defn- button-label
-  [os]
-  (str "Eval (or "
-       (if (= os :macosx) "Cmd" "Ctrl")
-       "-Enter)"))
-
-(defn- enter-binding
-  [enter]
-  (assoc {} enter #(re-frame/dispatch [::events/eval])))
-
-(defn- up-binding
-  [up]
-  (assoc {} up #(re-frame/dispatch [::events/history-prev])))
-
-(defn- down-binding
-  [down]
-  (assoc {} down #(re-frame/dispatch [::events/history-next])))
-
 (defn edit-box
-  [edit-opts cmirror-opts]
-  (let [key-bindings (re-frame/subscribe [::subs/key-bindings])]
-    (fn []
-      (let [enter (enter-binding (:enter @key-bindings))
-            down (down-binding (:down @key-bindings))
-            up (up-binding (:up @key-bindings))
-            ed-opts (merge {:node-id "input"} edit-opts)
-            cm-opts (merge {:extraKeys (merge enter up down)} cmirror-opts)]
-        [v-box :size "100%" :gap "5px"
-         :children
-         [[cmirror-box ed-opts cm-opts]
-          [button
-           :class "btn-primary"
-           :label (str "Eval")
-           :tooltip (str "Shortcut: " (name (:enter @key-bindings)))
-           :on-click #(re-frame/dispatch [::events/eval])]]]))))
+  [edit-opts cmirror-opts key-bindings]
+  (let [ed-opts (merge {:node-id "input"} edit-opts)
+        cm-opts (merge {:autofocus true} cmirror-opts)]
+    [v-box :size "100%" :gap "5px"
+     :children
+     [[cmirror-box ed-opts cm-opts]
+      [button
+       :class "btn-primary"
+       :label (str "Eval")
+       :tooltip (str "Shortcut: " (some-> (:enter key-bindings) name))
+       :on-click #(re-frame/dispatch [::events/eval])]]]))
 
 (def ^:private replete-preamble-text
   (str "ClojureScript " *clojurescript-version*
@@ -100,18 +76,37 @@
    :bottom   "0px"
    :width    "100%"})
 
+(defn- key-binding
+  [key-map [button event]]
+  (assoc {} (get key-map button) #(re-frame/dispatch [event])))
+
+(defn extra-key-bindings
+  [key-map event-map]
+  (apply merge (map (partial key-binding key-map) event-map)))
+
+(def ^:private event-bindings
+  {:enter ::events/eval
+   :right ::events/history-next
+   :down  ::events/history-next
+   :left  ::events/history-prev
+   :up    ::events/history-prev})
+
 (defn replete-editor
   []
-  (let [eval-opts {:node-id         "replete-output"
-                   :preamble-text   replete-preamble-text
-                   :preamble-markup preamble-markup}
-        eval-cm-opts {:theme "replete-eval-light"}
-        edit-opts {:node-id "replete-input"}
-        edit-cm-opts {:theme "replete-edit-light"}]
-    [box
-     :style main-style
-     :child [v-split :initial-split 70
-             :panel-1 [eval-box eval-opts eval-cm-opts]
-             :panel-2 [edit-box edit-opts edit-cm-opts]]]))
+  (let [key-bindings (re-frame/subscribe [::subs/key-bindings])]
+    (fn []
+      (let [eval-opts {:node-id         "replete-output"
+                       :preamble-text   replete-preamble-text
+                       :preamble-markup preamble-markup}
+            eval-cm-opts {:theme "replete-eval-light"}
+            edit-opts {:node-id "replete-input"}
+            extra-keys (extra-key-bindings @key-bindings event-bindings)
+            edit-cm-opts {:theme "replete-edit-light"
+                          :extraKeys extra-keys}]
+        [box
+         :style main-style
+         :child [v-split :initial-split 70
+                 :panel-1 [eval-box eval-opts eval-cm-opts]
+                 :panel-2 [edit-box edit-opts edit-cm-opts @key-bindings]]]))))
 
 
