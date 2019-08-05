@@ -15,15 +15,14 @@
 (defn- save-changes
   [cm _]
   (let [val (string/trim (.getValue cm))]
-    (when-not (empty? val)
+    (when (seq val)
       (re-frame/dispatch [::events/save-form val]))))
 
 (defn- update-codemirror
   [cm-ref compnt]
   (when-let [changes (:changes (reagent/props compnt))]
-    (if (:clear-input-form changes)
-      (.setValue @cm-ref "")
-      (.setValue @cm-ref changes))))
+    (.setValue @cm-ref
+      (if (:clear-input-form changes) "" changes))))
 
 (defn cmirror-edit-comp
   [opts]

@@ -136,21 +136,10 @@
   ;; no-op
   )
 
-(defn flush-stdout
+(defn stdin-stdout-stderr
   []
   ;; no-op
   )
-
-(defn flush-stderr
-  []
-  ;; no-op
-  )
-
-(defn read-stdin
-  []
-  (throw
-    (ex-info "Unsupported"
-             {:method "REPLETE_RAW_READ_STDIN"})))
 
 (defn list-files
   [path]
@@ -171,9 +160,11 @@
   )
 
 ;; UNSUPPORTED or no-ops
-(set! (.-REPLETE_RAW_READ_STDIN js/goog.global) read-stdin)
-(set! (.-REPLETE_RAW_FLUSH_STDOUT js/goog.global) flush-stdout)
-(set! (.-REPLETE_RAW_FLUSH_STDERR js/goog.global) flush-stderr)
+(set! (.-REPLETE_RAW_READ_STDIN js/goog.global) stdin-stdout-stderr)
+(set! (.-REPLETE_RAW_WRITE_STDOUT js/goog.global) stdin-stdout-stderr)
+(set! (.-REPLETE_RAW_WRITE_STDERR js/goog.global) stdin-stdout-stderr)
+(set! (.-REPLETE_RAW_FLUSH_STDOUT js/goog.global) stdin-stdout-stderr)
+(set! (.-REPLETE_RAW_FLUSH_STDERR js/goog.global) stdin-stdout-stderr)
 (set! (.-REPLETE_LIST_FILES js/goog.global) list-files)
 (set! (.-REPLETE_MKDIRS js/goog.global) make-parent-dirs)
 

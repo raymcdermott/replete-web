@@ -1,11 +1,10 @@
 (ns replete.events
   (:require [clojure.string :as string]
-            [replete.io-impl]
-            [replete.worker-client :as wc]
             [re-frame.core :refer [dispatch
                                    reg-event-db
                                    reg-event-fx
-                                   reg-fx]]))
+                                   reg-fx]]
+            [replete.prepl :as prepl]))
 
 (defn- key-bindings
   [os]
@@ -66,15 +65,10 @@
 (reg-fx
   ::async-eval
   (fn [clojure-form]
-    (wc/send! [:eval/form clojure-form])
-    (dispatch [::input-history clojure-form])))
-
-(reg-event-fx
-  :eval/result
-  (fn [_ [_ result]]
-    {:dispatch-n (list [::eval-result result]
-                       [::clear-input])}))
-
+    (let [result (prepl/read-eval clojure-form)]
+      (dispatch [::eval-result result])
+      (dispatch [::input-history clojure-form])
+      (dispatch [::clear-input]))))
 
 (reg-event-fx
   ::eval

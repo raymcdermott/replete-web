@@ -1,5 +1,6 @@
 {:main replete.worker
  :output-to "resources/public/js/compiled/worker.js"
- :output-dir "resources/public/js/compiled/out"
+ :output-dir "resources/public/js/compiled/worker-out"
+ :asset-path "/js/compiled/worker-out"
  :target :webworker
  :recompile-dependents false}

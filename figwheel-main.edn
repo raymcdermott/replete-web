@@ -1,4 +1,0 @@
-{:css-dirs ["resources/public/vendor/css"]
- :ring-server-options {:port 9600}
- ;; rest of the config
- }

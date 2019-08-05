@@ -121,7 +121,8 @@
            (map key-val)
            collate))
 
-(defn sources+meta* [names]
+(defn sources+meta*
+  [names]
   (let [in-names? (->> names (map str) set)
         relevant? (fn [{:keys [ns]}] (in-names? ns))]
     (some->> (resources)
@@ -131,9 +132,13 @@
              (map key-val)
              collate)))
 
-(defmacro sources
-  "Make a map of namespace name to source, looking for files on the classpath and in jars."
-  [& names]
+(defn all-sources+meta*
+  [names]
   (merge (cljs-aot-js+meta*)
          (goog+meta*)
          (sources+meta* names)))
+
+(defmacro sources
+  "Make a map of namespace name to source, looking for files on the classpath and in jars."
+  [& names]
+  (all-sources+meta* names))

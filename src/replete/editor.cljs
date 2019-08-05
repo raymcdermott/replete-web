@@ -10,14 +10,21 @@
     [replete.helpers :as helpers]
     [replete.subs :as subs]))
 
-(def ^:private editor-box-style
-  (merge (flex-child-style "1")
-         {:border        "1px solid lightgrey"
-          :border-radius "4px"}))
+(defn cmirror-eval-box
+  "Show results of eval"
+  [{:keys [opts cm-opts style]}]
+  (let [result (re-frame/subscribe [::subs/eval-result])]
+    (fn []
+      (let [cm-options (merge {:readOnly true} cm-opts)
+            opts0 (merge {:node-id "output" :changes @result} opts)
+            eval-opts (assoc opts0 :cm-options cm-options)]
+        [box
+         :style style
+         :child [cm-eval/cmirror-eval-comp eval-opts]]))))
 
-(defn cmirror-box
+(defn cmirror-edit-box
   "Edit forms with parinfer support"
-  [edit-opts cm-opts]
+  [edit-opts cm-opts edit=style]
   (let [clear-form (re-frame/subscribe [::subs/clear-input-form])
         restore-item (re-frame/subscribe [::subs/restore-item])]
     (fn []
@@ -26,30 +33,16 @@
                          edit-opts)
             opts (assoc opts0 :cm-options cm-opts)]
         [box
-         :style editor-box-style
+         :style edit=style
          :child [cm-edit/cmirror-edit-comp opts]]))))
 
-(defn eval-box
-  "Show results of eval"
-  [edit-opts cm-opts]
-  (let [result (re-frame/subscribe [::subs/eval-result])]
-    (fn []
-      (let [cm-options (merge {:readOnly true} cm-opts)
-            opts0 (merge {:node-id "output"
-                          :changes @result}
-                         edit-opts)
-            opts (assoc opts0 :cm-options cm-options)]
-        [box
-         :style editor-box-style
-         :child [cm-eval/cmirror-eval-comp opts]]))))
-
 (defn edit-box
-  [edit-opts cmirror-opts key-bindings]
-  (let [ed-opts (merge {:node-id "input"} edit-opts)
-        cm-opts (merge {:autofocus true} cmirror-opts)]
+  [{:keys [opts cm-opts key-bindings style]}]
+  (let [ed-opts (merge {:node-id "input"} opts)
+        cmirror-opts (merge {:autofocus true} cm-opts)]
     [v-box :size "100%" :gap "5px"
      :children
-     [[cmirror-box ed-opts cm-opts]
+     [[cmirror-edit-box ed-opts cmirror-opts style]
       [button
        :class "btn-primary"
        :label (str "Eval")
@@ -71,10 +64,20 @@
 
 (def ^:private main-style
   {:position "absolute"
-   :padding  "5px"
+   :padding  "0px"
+   :left     "0px"
+   :right    "0px"
    :top      "0px"
    :bottom   "0px"
    :width    "100%"})
+
+(def ^:private editor-style
+  (merge (flex-child-style "1")
+         {:border        "1px solid lightgrey"
+          :border-radius "4px"}))
+
+(def ^:private eval-style
+  (flex-child-style "1"))
 
 (defn- key-binding
   [key-map [button event]]
@@ -84,7 +87,7 @@
   [key-map event-map]
   (apply merge (map (partial key-binding key-map) event-map)))
 
-(def ^:private event-bindings
+(def event-bindings
   {:enter ::events/eval
    :right ::events/history-next
    :down  ::events/history-next
@@ -99,14 +102,22 @@
                        :preamble-text   replete-preamble-text
                        :preamble-markup preamble-markup}
             eval-cm-opts {:theme "replete-eval-light"}
-            edit-opts {:node-id "replete-input"}
+            eval-box-opts {:opts    eval-opts
+                           :cm-opts eval-cm-opts
+                           :style   eval-style}
+
             extra-keys (extra-key-bindings @key-bindings event-bindings)
-            edit-cm-opts {:theme "replete-edit-light"
-                          :extraKeys extra-keys}]
+            edit-cm-opts {:theme     "replete-edit-light"
+                          :extraKeys extra-keys}
+            edit-box-opts {:opts         {:node-id "replete-input"}
+                           :cm-opts      edit-cm-opts
+                           :key-bindings @key-bindings
+                           :style        editor-style}]
         [box
          :style main-style
-         :child [v-split :initial-split 70
-                 :panel-1 [eval-box eval-opts eval-cm-opts]
-                 :panel-2 [edit-box edit-opts edit-cm-opts @key-bindings]]]))))
+         :child
+         [v-split :initial-split 70
+          :panel-1 [cmirror-eval-box eval-box-opts]
+          :panel-2 [edit-box edit-box-opts]]]))))
 
 

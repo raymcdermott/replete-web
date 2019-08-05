@@ -1,4 +1,4 @@
-{:deps    {org.clojure/clojure         {:mvn/version "1.10.0"}
+{:deps    {org.clojure/clojure         {:mvn/version "1.10.1"}
            org.clojure/clojurescript   {:mvn/version "1.10.520"}
 
            org.clojure/test.check      {:mvn/version "0.10.0-alpha4"}
@@ -18,16 +18,19 @@
 
  :paths   ["src" "resources"]
 
- :aliases {:repl     {:main-opts ["-r"]}
-           :fig-repl {:jvm-opts   ["-Xmx1g" "-Xms1g"]
-                      :extra-deps {com.bhauman/figwheel-main       {:mvn/version "0.2.1-SNAPSHOT"}
-                                   com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}
-                      :main-opts  ["-m" "figwheel.main"
-                                   "-bb" "worker"
-                                   "-b" "replete" "-r"]}
-           :replrepl {:jvm-opts   ["-Xmx1g" "-Xms1g"]
-                      :extra-deps {com.bhauman/figwheel-main       {:mvn/version "0.2.1-SNAPSHOT"}
-                                   com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}
-                      :main-opts  ["-m" "figwheel.main"
-                                   "-bb" "worker"
-                                   "-b" "replrepl" "-r"]}}}
+ :aliases {:repl {:main-opts  ["-m" "cljs.main" "-w" "src" "-ro" "repl.edn" "-co" "replete.cljs.edn" "-c" "-r"]
+                  :extra-deps {binaryage/devtools {:mvn/version "0.9.10"}}}
+
+           :fig-repl {:jvm-opts    ["-Xmx1g" "-Xms1g"]
+                      :extra-paths ["test"]
+                      :extra-deps  {com.bhauman/figwheel-main       {:mvn/version "0.2.0"}
+                                    com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}}
+                      :main-opts   ["-m" "figwheel.main" "-b" "replete" "-r"]}
+
+           :test {:extra-paths ["test"]
+                  :extra-deps  {olical/cljs-test-runner {:mvn/version "3.7.0"}}
+                  :main-opts   ["-m" "cljs-test-runner.main"]}
+
+           :dist {:jvm-opts   ["-Xmx1g" "-Xms1g"]
+                  :main-opts  ["-m" "cljs.main" "-co" "dist.cljs.edn" "-c"]
+                  :extra-deps {binaryage/devtools {:mvn/version "0.9.10"}}}}}

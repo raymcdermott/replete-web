@@ -1,10 +1,11 @@
 (ns replete.system
   (:require
+    [replete.io-impl]
+    [replete.fs]
     [reagent.core :as reagent]
     [re-frame.core :as re-frame]
     [replete.editor :as editor]
-    [replete.events :as events]
-    [replete.worker-client :as wc]))
+    [replete.events :as events]))
 
 (defn dev-setup []
   (enable-console-print!))
@@ -15,7 +16,6 @@
                   (.getElementById js/document "app")))
 
 (defn ^:export init []
-  (wc/init!)
   (re-frame/dispatch-sync [::events/initialize-db])
   (dev-setup)
   (mount-root))

@@ -13,11 +13,10 @@
   (let [now (.getTime (js/Date.))]
     (busy-sleep (+ now m))))
 
-
-;; Add each of the above to a global variable so that it is accessed in the code
-
+;; Pull all dependencies - we can filter down later
 (def dependencies
-  (sources clojure.core.reducers
+  (sources chivorcam.core
+           clojure.core.reducers
            clojure.data
            clojure.reflect
            clojure.set
@@ -60,7 +59,7 @@
 
 (defn load-from-jar
   [file-path resource]
-  (throw (ex-info "Unsupported"
+  (throw (ex-info "Unsupported Method"
                   {:method    "REPLETE_LOAD_FROM_JAR"
                    :file-path file-path
                    :resource  resource})))
@@ -68,7 +67,7 @@
 (defn unsupported-request
   [& args]
   (throw
-    (ex-info "Unsupported"
+    (ex-info "Unsupported Method"
              {:method "REPLETE_REQUEST"
               :args   args})))
 

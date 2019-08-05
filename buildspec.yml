@@ -1,0 +1,35 @@
+version: 0.2
+
+env:
+  variables:
+    CLJ_VERSION: "1.10.0.442"
+
+phases:
+  install:
+    runtime-versions:
+      java: openjdk11
+    commands:
+      - curl -O https://download.clojure.org/install/linux-install-${CLJ_VERSION}.sh
+      - chmod +x linux-install-${CLJ_VERSION}.sh
+      - ./linux-install-${CLJ_VERSION}.sh
+
+  build:
+    commands:
+      - clojure -A:dist
+      - (grep -l 'goog\/deps' resources/public/js/compiled/out/replete/io_impl.* ; echo $?)
+
+      - touch src/replete/io_impl.cljs
+      - clojure -A:dist
+      - (grep -l 'goog\/deps' resources/public/js/compiled/out/replete/io_impl.* ; echo $?)
+
+      - clojure -A:test | tee test.out
+      - grep -l 'goog\/deps' cljs-test-runner-out/replete/io_impl.js
+#      - grep '0 failures, 0 errors.' test.out
+  post_build:
+    commands:
+      - aws s3 sync resources/public s3://${S3_BUCKET} --delete
+      - scripts/invalidate-cdn.sh
+
+cache:
+  paths:
+    - '/root/.m2/**/*'
